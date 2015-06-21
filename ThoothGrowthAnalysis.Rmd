@@ -1,0 +1,116 @@
+```{r, message=FALSE, echo=FALSE}
+library(ggplot2)
+```
+---
+title: "ToothGrowth Exploratory Analysis"
+author: "Axel Garcia"
+date: "21 de junio de 2015"
+output: html_document
+---
+## Overview
+This document discusses the analysis done on the ToothGrowth data provided in R.
+That data set was obtained from C. I. Bliss (1952) The Statistics of Bioassay. 
+Academic Press (according with the R Documentation).
+
+That data set is mean to describe the effect of vitamin C on tooth growth in Guinea
+pigs. More information about this data can be found in the R Documentation. The
+Following link points to it: [The Effect of Vitamin C on Tooth Growth in Guinea Pigs](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/ToothGrowth.html)
+
+## Data Information
+Format
+
+A data frame with 60 observations on 3 variables.
+
+[,1]    len	numeric	Tooth length
+
+[,2]	supp	factor	Supplement type (VC or OJ).
+
+[,3]	dose	numeric	Dose in milligrams.
+
+```{r Summary}
+data(ToothGrowth)
+
+str(ToothGrowth)
+```
+
+Supp is a factor variable whereas the other two are numeric variables; furthermore, 
+those numeric variables are continuous. 
+
+Wondering about the data, it maybe that the dose has something to do with the teeth 
+length. The following plot shows how the relation ship between those two variables 
+looks like:
+```{r,fig.height=3}
+ggplot( ToothGrowth, aes(y=len, x=dose) ) + 
+    geom_boxplot() + facet_grid( .~supp) +
+    ggtitle( "Dose effect on Length by Supplement Type" )
+```
+The mean of both variables is contained by the 2nd and 3rd quartiles. That means
+that both data overlaps. Given that evidence, the dose does not seem to have a
+significaive effect on the teeth length.
+
+In the other hand, the supplement type may have an impact on the teeth lenght. Lets see how the 
+relationship beteen those two variables look like.
+```{r,fig.height=3}
+ggplot( ToothGrowth, aes(y=len, x=supp) ) + 
+    geom_boxplot() + facet_grid( .~dose) +
+    ggtitle( "Supplement Type effect on Length by Dose" )
+```
+
+When the dose is 0.5 the chart apparently shows that the means of OJ and VC 
+supplement types are not contained in each other. However, there is still an
+overlap between the 1st quartile of OJ and the 3rd quartile of VC. Lets see
+what additional information the hypothesis test provides for this case.
+
+When dose is 2, the plot shows that OJ data is completely with in the VC
+distribution. In this case it does not seem to be any difference between them.
+
+Finally, with dose equals to 1 the chart shows a clear difference and suggest
+OJ may be related to a bigger teeth growth than VC.
+
+## Hypothesis Test
+### Dose effect on Length by Supplement Type
+The T-Test shows that there is not a significant statistical difference when
+comparing the effect that the supplement type had over tooth length:
+```{r T-Test All Doses}
+ test <- t.test( len~supp, data=ToothGrowth )
+test
+```
+
+Confidence interval includes 0 which means it is possible that it is equal. Also
+the p-value is `r round(test$p.value*100, 1)`% which is greater than 5%. The null 
+hypothesis cannot be rejected.
+
+### Supplement Type effect on Length by Dose
+#### Dose Equals to 0.5
+```{r T-Test Dose0.5}
+data <- subset( ToothGrowth, dose %in% c(0.5) )
+test <- t.test( len~supp, data=data )
+```
+P-Value of the test is `r round(test$p.value, 3)` which is lower than 5%. for
+a dose equals to 0.5mm there is a significant statistic difference.
+
+
+#### Dose Equals to 1
+There seems to be an interesting relationship between the supplement type when
+the dose is one.
+```{r T-Test Dose1}
+data <- subset( ToothGrowth, dose %in% c(1) )
+test <- t.test( len~supp, data=data )
+```
+P-Value of the test is `r round(test$p.value, 3)` this is lower than 5%, too. 
+There is also a significant statistic difference when the dose equals to 1mm .
+
+#### Dose Between 0.5 and 1
+```{r T-Test Dose 0.5 and 1}
+data <- subset( ToothGrowth, dose %in% c(0.5, 1) )
+t.test( len~supp, data=data )
+```
+Since p-value of the test is lower than 5% the t-test supports the alternative 
+hypothesis. The effects of VC and OJ supplement types are different.
+
+
+### Conclusion
+There is a significant statistical difference in the Guinea Pig teeth growth between
+VC and OJ supplement types when the dose is 0.5mg or 1mg. The second
+plot clearly shows that OJ supplement type has better results than VC supplement
+type.
